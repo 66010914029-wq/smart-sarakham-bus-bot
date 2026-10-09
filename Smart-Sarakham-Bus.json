@@ -1,0 +1,522 @@
+{
+  "name": "Smart Sarakham Bus Complete Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bus-bot",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1264,
+        112
+      ],
+      "id": "f4fe36aa-ccb6-49bf-b2a7-dbd824eaf935",
+      "name": "Webhook",
+      "webhookId": "af8aea62-f7fb-45d2-b30a-af03b7bf373e"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3535e50b-b36e-440e-9eee-494e877aa64d",
+              "name": "replyToken",
+              "value": "=={{ $json.body.events[0].replyToken }}",
+              "type": "string"
+            },
+            {
+              "id": "346e4b31-10b7-4c85-871a-8f0e238341c7",
+              "name": "userMessage",
+              "value": "=={{ $json.body.events[0].message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -864,
+        304
+      ],
+      "id": "f906c0f5-eb2a-4285-83f6-e475362b754a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "check-image-url",
+              "leftValue": "={{ $json.Image_URL }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        160
+      ],
+      "id": "89ecaf93-4329-4993-8396-aba20b4e087c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/push",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_LINE_CHANNEL_ACCESS_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $('Webhook').first().json.body.events[0].source.userId }}\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"🚍 เส้นทาง: {{ $json.Destination }}\\n{{ $json.Next_Bus_Alert }}\"\n    },\n    {\n      \"type\": \"image\",\n      \"originalContentUrl\": \"{{ $json.Image_URL }}\",\n      \"previewImageUrl\": \"{{ $json.Image_URL }}\",\n      \"quickReply\": {\n        \"items\": [\n          {\n            \"type\": \"action\",\n            \"action\": {\n              \"type\": \"message\",\n              \"label\": \"🎟️ จองตั๋ว\",\n              \"text\": \"จองตั๋ว\"\n            }\n          },\n          {\n            \"type\": \"action\",\n            \"action\": {\n              \"type\": \"message\",\n              \"label\": \"🔄 ดูเส้นทางอื่น\",\n              \"text\": \"เมนูหลัก\"\n            }\n          },\n          {\n            \"type\": \"action\",\n            \"action\": {\n              \"type\": \"uri\",\n              \"label\": \"📍 แผนที่ บขส.\",\n              \"uri\": \"https://www.google.com/maps/search/?api=1&query=%E0%B8%9A%E0%B8%82%E0%B8%AA.2%20%E0%B8%88.%E0%B8%A1%E0%B8%AB%E0%B8%B2%E0%B8%AA%E0%B8%B2%E0%B8%A3%E0%B8%84%E0%B8%B2%E0%B8%A1\"\n            }\n          },\n          {\n            \"type\": \"action\",\n            \"action\": {\n              \"type\": \"uri\",\n              \"label\": \"📞 โทร บขส.\",\n              \"uri\": \"tel:043711545\"\n            }\n          }\n        ]\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        32
+      ],
+      "id": "77c66105-40da-4dfe-b0ea-447c21eb4a52",
+      "name": "HTTP Request (Send Image)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/push",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_LINE_CHANNEL_ACCESS_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $('Webhook').first().json.body.events[0].source.userId }}\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"ขออภัยครับ ไม่พบตารางเดินรถสำหรับเส้นทางนี้ กรุณาระบุปลายทางใหม่อีกครั้ง เช่น มุกดาหาร, ขอนแก่น, ร้อยเอ็ด, อุบลฯ, โคราช, กรุงเทพฯ, ศรีสะเกษ, อุดรธานี\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        288
+      ],
+      "id": "4f926e4a-769b-4c9a-a2cb-7684ec58cabc",
+      "name": "HTTP Request (Not Found)"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "df51944a-13bd-4926-932e-61265ff59202",
+                    "leftValue": "={{ $json.body.events[0].message.text }}",
+                    "rightValue": "เมนูหลัก",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "menu"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.events[0].type }}",
+                    "rightValue": "follow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "86b9d1c1-0c54-4b9c-8023-3caaeb96c7da"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "follow"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ac62de36-0368-429a-a5b0-8453e60026c2",
+                    "leftValue": "={{ $json.body.events[0].message.text }}",
+                    "rightValue": "จองตั๋ว",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Booking"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b4817a0f-b017-4b56-b070-ff12647a69d8",
+                    "leftValue": "={{ $json.body.events[0].message.text }}",
+                    "rightValue": "บริษัทขนส่ง",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "company"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "message"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1040,
+        112
+      ],
+      "id": "d67ee029-54e4-4351-b43c-6c4549fb8481",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/push",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_LINE_CHANNEL_ACCESS_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $('Webhook').first().json.body.events[0].source.userId }}\",\n  \"messages\": [\n    {\n      \"type\": \"flex\",\n      \"altText\": \"🚍 เมนูตารางเดินรถมหาสารคาม\",\n      \"contents\": {\n        \"type\": \"bubble\",\n        \"header\": {\n          \"type\": \"box\",\n          \"layout\": \"vertical\",\n          \"backgroundColor\": \"#06C755\",\n          \"paddingAll\": \"15px\",\n          \"contents\": [\n            {\n              \"type\": \"text\",\n              \"text\": \"🚍 ตารางเดินรถมหาสารคาม\",\n              \"weight\": \"bold\",\n              \"color\": \"#ffffff\",\n              \"size\": \"lg\"\n            },\n            {\n              \"type\": \"text\",\n              \"text\": \"เลือกปลายทาง หรือติดต่อบริษัทรถเพื่อจองตั๋ว\",\n              \"color\": \"#ffffff\",\n              \"size\": \"xs\",\n              \"margin\": \"xs\"\n            }\n          ]\n        },\n        \"body\": {\n          \"type\": \"box\",\n          \"layout\": \"vertical\",\n          \"spacing\": \"sm\",\n          \"contents\": [\n            {\n              \"type\": \"button\",\n              \"action\": {\n                \"type\": \"message\",\n                \"label\": \"🎟️ จองตั๋วออนไลน์\",\n                \"text\": \"จองตั๋ว\"\n              },\n              \"style\": \"primary\",\n              \"color\": \"#fd7e14\",\n              \"height\": \"sm\"\n            },\n            {\n              \"type\": \"button\",\n              \"action\": {\n                \"type\": \"message\",\n                \"label\": \"🏢 บริษัทขนส่ง / เบอร์โทรติดต่อ\",\n                \"text\": \"บริษัทขนส่ง\"\n              },\n              \"style\": \"primary\",\n              \"color\": \"#0d6efd\",\n              \"height\": \"sm\"\n            },\n            {\n              \"type\": \"separator\",\n              \"margin\": \"md\"\n            },\n            {\n              \"type\": \"text\",\n              \"text\": \"📍 เลือกปลายทางดูตารางรถ\",\n              \"weight\": \"bold\",\n              \"color\": \"#555555\",\n              \"size\": \"xs\",\n              \"margin\": \"xs\"\n            },\n            {\n              \"type\": \"box\",\n              \"layout\": \"horizontal\",\n              \"spacing\": \"sm\",\n              \"contents\": [\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"message\",\n                    \"label\": \"📍 มุกดาหาร\",\n                    \"text\": \"ไปมุกดาหาร\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\"\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"message\",\n                    \"label\": \"📍 ขอนแก่น\",\n                    \"text\": \"ไปขอนแก่น\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\"\n                }\n              ]\n            },\n            {\n              \"type\": \"box\",\n              \"layout\": \"horizontal\",\n              \"spacing\": \"sm\",\n              \"contents\": [\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"message\",\n                    \"label\": \"📍 ร้อยเอ็ด\",\n                    \"text\": \"ไปร้อยเอ็ด\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\"\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"message\",\n                    \"label\": \"📍 อุบลฯ\",\n                    \"text\": \"ไปอุบล\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\"\n                }\n              ]\n            },\n            {\n              \"type\": \"box\",\n              \"layout\": \"horizontal\",\n              \"spacing\": \"sm\",\n              \"contents\": [\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"message\",\n                    \"label\": \"📍 โคราช\",\n                    \"text\": \"ไปโคราช\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\"\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"message\",\n                    \"label\": \"📍 กรุงเทพฯ\",\n                    \"text\": \"ไปกรุงเทพ\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\"\n                }\n              ]\n            },\n            {\n              \"type\": \"box\",\n              \"layout\": \"horizontal\",\n              \"spacing\": \"sm\",\n              \"contents\": [\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"message\",\n                    \"label\": \"📍 ศรีสะเกษ\",\n                    \"text\": \"ไปศรีสะเกษ\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\"\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"message\",\n                    \"label\": \"📍 อุดรธานี\",\n                    \"text\": \"ไปอุดร\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\"\n                }\n              ]\n            },\n            {\n              \"type\": \"separator\",\n              \"margin\": \"md\"\n            },\n            {\n              \"type\": \"box\",\n              \"layout\": \"horizontal\",\n              \"spacing\": \"sm\",\n              \"contents\": [\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"📍 แผนที่ บขส.2\",\n                    \"uri\": \"https://www.google.com/maps/search/?api=1&query=%E0%B8%9A%E0%B8%82%E0%B8%AA.2%20%E0%B8%88.%E0%B8%A1%E0%B8%AB%E0%B8%B2%E0%B8%AA%E0%B8%B2%E0%B8%A3%E0%B8%84%E0%B8%B2%E0%B8%A1\"\n                  },\n                  \"style\": \"link\",\n                  \"height\": \"sm\"\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"📞 เบอร์ บขส.\",\n                    \"uri\": \"tel:043711545\"\n                  },\n                  \"style\": \"link\",\n                  \"height\": \"sm\"\n                }\n              ]\n            }\n          ]\n        }\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -752,
+        -416
+      ],
+      "id": "29389711-a9b1-4b21-a931-d22678fae7cd",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1u1fsJDld2YAhfa7moTt5El_HovBT9WhWRVtps_cicPA",
+          "mode": "list",
+          "cachedResultName": "Bus_Schedules",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1u1fsJDld2YAhfa7moTt5El_HovBT9WhWRVtps_cicPA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "ชีต1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1u1fsJDld2YAhfa7moTt5El_HovBT9WhWRVtps_cicPA/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -592,
+        304
+      ],
+      "id": "44c728ef-b99b-49ad-bb14-5300cc059869",
+      "name": "Get row(s) in sheet"
+    },
+    {
+      "parameters": {
+        "jsCode": "const events = $('Webhook').first()?.json?.body?.events || [];\nconst firstEvent = events[0] || {};\nconst rawText = firstEvent?.message?.text || '';\nconst userText = rawText.trim();\nconst search = userText.toLowerCase();\n\n// 🔒 ล็อกคำสั่งระบบ\nconst systemCommands = ['เมนูหลัก', 'จองตั๋ว', 'บริษัทขนส่ง'];\nif (!userText || systemCommands.includes(userText)) {\n  return [];\n}\n\n// 🔍 ค้นหาแถวที่ตรงกับคำค้นหา\nconst matchedRow = $input.all().find(item => {\n  const row = item.json;\n  const keywords = (row.Keywords || '').split(',').map(k => k.trim().toLowerCase());\n  const destination = (row.Destination || '').toLowerCase();\n  const company = (row.Company || '').toLowerCase();\n\n  return keywords.some(k => k && (search.includes(k) || k.includes(search))) || \n         (destination && search.includes(destination)) ||\n         (company && (search.includes(company) || company.includes(search)));\n});\n\nif (matchedRow && matchedRow.json.Image_URL) {\n  const row = matchedRow.json;\n  \n  // ⏱️ คำนวณเวลากรุงเทพฯ ปัจจุบัน\n  const now = new Date(new Date().toLocaleString(\"en-US\", { timeZone: \"Asia/Bangkok\" }));\n  const currentMinutes = now.getHours() * 60 + now.getMinutes();\n\n  // ดึงรอบเวลาจากคอลัมน์ Departure_Times\n  const timesStr = row.Departure_Times || '';\n  const timeList = timesStr.split(',').map(t => t.trim()).filter(t => t);\n\n  let nextBus = null;\n  let minutesLeft = 0;\n\n  for (const t of timeList) {\n    const parts = t.split(':');\n    if (parts.length === 2) {\n      const busMinutes = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);\n      if (busMinutes > currentMinutes) {\n        nextBus = t;\n        minutesLeft = busMinutes - currentMinutes;\n        break;\n      }\n    }\n  }\n\n  // สร้างข้อความสรุปรอบรถ\n  let alertMessage = '';\n  if (nextBus) {\n    const hours = Math.floor(minutesLeft / 60);\n    const mins = minutesLeft % 60;\n    const timeText = hours > 0 ? `${hours} ชม. ${mins} นาที` : `${mins} นาที`;\n    alertMessage = `⏰ รอบถัดไป: ${nextBus} น. (เหลือเวลาเดินทางไป บขส. อีก ${timeText})`;\n  } else if (timeList.length > 0) {\n    alertMessage = `🌙 รอบรถวันนี้หมดแล้ว (รอบแรกพรุ่งนี้: ${timeList[0]} น.)`;\n  } else {\n    alertMessage = `ℹ️ ตรวจสอบเวลาเดินรถตามตารางในรูปภาพ`;\n  }\n\n  return [{\n    json: {\n      ...row,\n      Next_Bus_Alert: alertMessage\n    }\n  }];\n} else {\n  return [{ json: { Image_URL: '' } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        304
+      ],
+      "id": "827ca6f8-741e-4b16-a355-18012cdbd2ff",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/push",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_LINE_CHANNEL_ACCESS_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $('Webhook').first().json.body.events[0].source.userId }}\",\n  \"messages\": [\n    {\n      \"type\": \"flex\",\n      \"altText\": \"🎟️ จองตั๋วรถโดยสารออนไลน์\",\n      \"contents\": {\n        \"type\": \"carousel\",\n        \"contents\": [\n          {\n            \"type\": \"bubble\",\n            \"size\": \"kilo\",\n            \"header\": {\n              \"type\": \"box\",\n              \"layout\": \"vertical\",\n              \"backgroundColor\": \"#2563EB\",\n              \"paddingAll\": \"15px\",\n              \"contents\": [\n                {\n                  \"type\": \"text\",\n                  \"text\": \"🚍 สหพันธ์ร้อยเอ็ดทัวร์\",\n                  \"weight\": \"bold\",\n                  \"color\": \"#FFFFFF\",\n                  \"size\": \"sm\"\n                }\n              ]\n            },\n            \"body\": {\n              \"type\": \"box\",\n              \"layout\": \"vertical\",\n              \"spacing\": \"md\",\n              \"paddingAll\": \"15px\",\n              \"contents\": [\n                {\n                  \"type\": \"text\",\n                  \"text\": \"เดินทาง กรุงเทพฯ, มุกดาหาร, อุบลฯ,\\nยโสธร, ร้อยเอ็ด\",\n                  \"size\": \"xxs\",\n                  \"color\": \"#64748B\",\n                  \"wrap\": true\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"💬 แอด LINE จองตั๋ว\",\n                    \"uri\": \"https://line.me/R/ti/p/@sahaphan\"\n                  },\n                  \"style\": \"primary\",\n                  \"color\": \"#22C55E\",\n                  \"height\": \"sm\"\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"📞 โทร 043-512-546\",\n                    \"uri\": \"tel:043512546\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\"\n                }\n              ]\n            }\n          },\n          {\n            \"type\": \"bubble\",\n            \"size\": \"kilo\",\n            \"header\": {\n              \"type\": \"box\",\n              \"layout\": \"vertical\",\n              \"backgroundColor\": \"#06B6D4\",\n              \"paddingAll\": \"15px\",\n              \"contents\": [\n                {\n                  \"type\": \"text\",\n                  \"text\": \"🚍 นครชัยแอร์ (NCA)\",\n                  \"weight\": \"bold\",\n                  \"color\": \"#FFFFFF\",\n                  \"size\": \"sm\"\n                }\n              ]\n            },\n            \"body\": {\n              \"type\": \"box\",\n              \"layout\": \"vertical\",\n              \"spacing\": \"md\",\n              \"paddingAll\": \"15px\",\n              \"contents\": [\n                {\n                  \"type\": \"text\",\n                  \"text\": \"จองตั๋วออนไลน์ 24 ชม. เลือกที่นั่งได้ทันที\",\n                  \"size\": \"xxs\",\n                  \"color\": \"#64748B\",\n                  \"wrap\": true\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"🌐 จองผ่านเว็บไซต์\",\n                    \"uri\": \"https://www.nakhonchaiair.com\"\n                  },\n                  \"style\": \"primary\",\n                  \"color\": \"#06B6D4\",\n                  \"height\": \"sm\"\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"📞 Call Center 1624\",\n                    \"uri\": \"tel:1624\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\"\n                }\n              ]\n            }\n          },\n          {\n            \"type\": \"bubble\",\n            \"size\": \"kilo\",\n            \"header\": {\n              \"type\": \"box\",\n              \"layout\": \"vertical\",\n              \"backgroundColor\": \"#F97316\",\n              \"paddingAll\": \"15px\",\n              \"contents\": [\n                {\n                  \"type\": \"text\",\n                  \"text\": \"🚍 บขส. 999\",\n                  \"weight\": \"bold\",\n                  \"color\": \"#FFFFFF\",\n                  \"size\": \"sm\"\n                }\n              ]\n            },\n            \"body\": {\n              \"type\": \"box\",\n              \"layout\": \"vertical\",\n              \"spacing\": \"md\",\n              \"paddingAll\": \"15px\",\n              \"contents\": [\n                {\n                  \"type\": \"text\",\n                  \"text\": \"จองตั๋ว บขส. 999 ทุกเส้นทาง โอนจ่ายฟรีค่าธรรมเนียม\",\n                  \"size\": \"xxs\",\n                  \"color\": \"#64748B\",\n                  \"wrap\": true\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"🌐 จองตั๋วออนไลน์ บขส.\",\n                    \"uri\": \"https://www.transport.co.th\"\n                  },\n                  \"style\": \"primary\",\n                  \"color\": \"#F97316\",\n                  \"height\": \"sm\"\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"📞 Call Center บขส.\",\n                    \"uri\": \"tel:1490\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\"\n                }\n              ]\n            }\n          }\n        ]\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -768,
+        -176
+      ],
+      "id": "72c15ef3-003e-4254-878b-fe00fa932c7b",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/push",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_LINE_CHANNEL_ACCESS_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $('Webhook').first().json.body.events[0].source.userId }}\",\n  \"messages\": [\n    {\n      \"type\": \"flex\",\n      \"altText\": \"🏢 รายชื่อบริษัทขนส่งและเบอร์โทรติดต่อ\",\n      \"contents\": {\n        \"type\": \"bubble\",\n        \"header\": {\n          \"type\": \"box\",\n          \"layout\": \"vertical\",\n          \"backgroundColor\": \"#1E293B\",\n          \"paddingAll\": \"18px\",\n          \"contents\": [\n            {\n              \"type\": \"text\",\n              \"text\": \"🏢 บริษัทขนส่ง / เบอร์โทรติดต่อ\",\n              \"weight\": \"bold\",\n              \"color\": \"#FFFFFF\",\n              \"size\": \"md\"\n            },\n            {\n              \"type\": \"text\",\n              \"text\": \"กดโทรออกหรือติดต่อสอบถามรอบรถได้ทันที\",\n              \"color\": \"#94A3B8\",\n              \"size\": \"xxs\",\n              \"margin\": \"xs\"\n            }\n          ]\n        },\n        \"body\": {\n          \"type\": \"box\",\n          \"layout\": \"vertical\",\n          \"spacing\": \"md\",\n          \"paddingAll\": \"16px\",\n          \"contents\": [\n            {\n              \"type\": \"box\",\n              \"layout\": \"horizontal\",\n              \"contents\": [\n                {\n                  \"type\": \"box\",\n                  \"layout\": \"vertical\",\n                  \"flex\": 3,\n                  \"contents\": [\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"บขส. 999\",\n                      \"weight\": \"bold\",\n                      \"size\": \"sm\",\n                      \"color\": \"#1E293B\"\n                    },\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"กรุงเทพฯ, นครพนม\",\n                      \"size\": \"xxs\",\n                      \"color\": \"#64748B\"\n                    }\n                  ]\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"📞 โทร\",\n                    \"uri\": \"tel:043711518\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\",\n                  \"flex\": 1\n                }\n              ]\n            },\n            {\n              \"type\": \"separator\"\n            },\n            {\n              \"type\": \"box\",\n              \"layout\": \"horizontal\",\n              \"contents\": [\n                {\n                  \"type\": \"box\",\n                  \"layout\": \"vertical\",\n                  \"flex\": 3,\n                  \"contents\": [\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"เพชรประเสริฐทัวร์\",\n                      \"weight\": \"bold\",\n                      \"size\": \"sm\",\n                      \"color\": \"#1E293B\"\n                    },\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"เชียงใหม่, อุบลฯ (ช่อง 8)\",\n                      \"size\": \"xxs\",\n                      \"color\": \"#64748B\"\n                    }\n                  ]\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"📞 โทร\",\n                    \"uri\": \"tel:0894167666\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\",\n                  \"flex\": 1\n                }\n              ]\n            },\n            {\n              \"type\": \"separator\"\n            },\n            {\n              \"type\": \"box\",\n              \"layout\": \"horizontal\",\n              \"contents\": [\n                {\n                  \"type\": \"box\",\n                  \"layout\": \"vertical\",\n                  \"flex\": 3,\n                  \"contents\": [\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"เชิดชัยทัวร์ / สารคาม\",\n                      \"weight\": \"bold\",\n                      \"size\": \"sm\",\n                      \"color\": \"#1E293B\"\n                    },\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"โคราช, กรุงเทพฯ (ช่อง 7)\",\n                      \"size\": \"xxs\",\n                      \"color\": \"#64748B\"\n                    }\n                  ]\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"📞 โทร\",\n                    \"uri\": \"tel:0832365188\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\",\n                  \"flex\": 1\n                }\n              ]\n            },\n            {\n              \"type\": \"separator\"\n            },\n            {\n              \"type\": \"box\",\n              \"layout\": \"horizontal\",\n              \"contents\": [\n                {\n                  \"type\": \"box\",\n                  \"layout\": \"vertical\",\n                  \"flex\": 3,\n                  \"contents\": [\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"สงวนชัยอุบลเดินรถ\",\n                      \"weight\": \"bold\",\n                      \"size\": \"sm\",\n                      \"color\": \"#1E293B\"\n                    },\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"อุบลฯ, ศรีสะเกษ, อุดรธานี\",\n                      \"size\": \"xxs\",\n                      \"color\": \"#64748B\"\n                    }\n                  ]\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"📞 โทร\",\n                    \"uri\": \"tel:0614748225\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\",\n                  \"flex\": 1\n                }\n              ]\n            },\n            {\n              \"type\": \"separator\"\n            },\n            {\n              \"type\": \"box\",\n              \"layout\": \"horizontal\",\n              \"contents\": [\n                {\n                  \"type\": \"box\",\n                  \"layout\": \"vertical\",\n                  \"flex\": 3,\n                  \"contents\": [\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"รุ่งประเสริฐทัวร์\",\n                      \"weight\": \"bold\",\n                      \"size\": \"sm\",\n                      \"color\": \"#1E293B\"\n                    },\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"สารคาม - กรุงเทพฯ (สาย 932)\",\n                      \"size\": \"xxs\",\n                      \"color\": \"#64748B\"\n                    }\n                  ]\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"📞 โทร\",\n                    \"uri\": \"tel:043711072\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\",\n                  \"flex\": 1\n                }\n              ]\n            },\n            {\n              \"type\": \"separator\"\n            },\n            {\n              \"type\": \"box\",\n              \"layout\": \"horizontal\",\n              \"contents\": [\n                {\n                  \"type\": \"box\",\n                  \"layout\": \"vertical\",\n                  \"flex\": 3,\n                  \"contents\": [\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"รถตู้สารคาม - บ้านไผ่ / ขอนแก่น\",\n                      \"weight\": \"bold\",\n                      \"size\": \"sm\",\n                      \"color\": \"#1E293B\"\n                    },\n                    {\n                      \"type\": \"text\",\n                      \"text\": \"เชื่อมต่อรถไฟ / รถตู้ชมพู\",\n                      \"size\": \"xxs\",\n                      \"color\": \"#64748B\"\n                    }\n                  ]\n                },\n                {\n                  \"type\": \"button\",\n                  \"action\": {\n                    \"type\": \"uri\",\n                    \"label\": \"📞 โทร\",\n                    \"uri\": \"tel:0892808435\"\n                  },\n                  \"style\": \"secondary\",\n                  \"height\": \"sm\",\n                  \"flex\": 1\n                }\n              ]\n            }\n          ]\n        },\n        \"footer\": {\n          \"type\": \"box\",\n          \"layout\": \"vertical\",\n          \"contents\": [\n            {\n              \"type\": \"button\",\n              \"action\": {\n                \"type\": \"message\",\n                \"label\": \"🔙 กลับไปเมนูหลัก\",\n                \"text\": \"เมนูหลัก\"\n              },\n              \"style\": \"link\",\n              \"height\": \"sm\"\n            }\n          ]\n        }\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -752,
+        48
+      ],
+      "id": "0a7aa7f3-a49c-40e9-bf7c-bfb706352256",
+      "name": "HTTP Request (Company Info)"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request (Send Image)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request (Not Found)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request (Company Info)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5dbcff66-8b59-4202-a1e5-6cec23420b57",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0a8bf348948e1216555bb4be876d9f8f2d1aa19d6643c3203b48a67fec33e7f0"
+  },
+  "nodeGroups": [],
+  "id": "Nu2JwHUaV1XD3Mf6",
+  "tags": []
+}
